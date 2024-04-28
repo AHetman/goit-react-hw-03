@@ -1,64 +1,68 @@
 import { useState, useEffect } from "react";
-import Description from "../Description/Description";
-import Feedback from "../Feedback/Feedback";
-import Notification from "../Notification/Notification";
-import Options from "../Options/Options";
+import * as Yup from "yup";
+import ContactForm from "../ContactForm/ContactForm";
+import SearchBox from "../SearchBox/SearchBox";
+import ContactList from "../ContactList/ContactList";
+import css from "./App.module.css";
+
+const initialContact = {
+  name: "",
+  number: "",
+};
+
+const FeedbackSchema = Yup.object({
+  name: Yup.string()
+    .min(3, "Too Short!")
+    .max(50, "Too Long!")
+    .required("Required"),
+  number: Yup.string()
+    .min(3, "Too Short!")
+    .max(50, "Too Long!")
+    .required("Required"),
+});
 
 const App = () => {
-  const [click, setClick] = useState(() => {
-    const savedClick = JSON.parse(localStorage.getItem("saved-click"));
-    if (savedClick !== null) {
-      return savedClick;
-    }
-    return {
-      good: 0,
-      neutral: 0,
-      bad: 0,
-    };
-  });
+  const contactsUsers = JSON.parse(localStorage.getItem("contacts")) || [
+    { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
+    { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
+    { id: "id-3", name: "Eden Clements", number: "645-17-79" },
+    { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
+  ];
 
-  useEffect(() => {
-    localStorage.setItem("saved-click", JSON.stringify(click));
-  }, [click]);
+  const [contacts, setContacts] = useState(contactsUsers);
+  const [filter, setFilter] = useState("");
 
-  const updateFeedback = (feedbackType) => {
-    setClick((clicks) => ({
-      ...clicks,
-      [feedbackType]: clicks[feedbackType] + 1,
-    }));
-  };
+  const searchContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
-  const totalFeedback = click.good + click.neutral + click.bad;
-
-  const resetFunction = () => {
-    setClick({
-      good: 0,
-      neutral: 0,
-      bad: 0,
+  const addContacts = (newContact) => {
+    setContacts((prevContact) => {
+      return [...prevContact, newContact];
     });
   };
 
-  const positivePercent = Math.round((click.good / totalFeedback) * 100);
+  useEffect(() => {
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
+
+  const deleteContacts = (contactId) => {
+    setContacts((prevContact) => {
+      return prevContact.filter((contact) => contact.id !== contactId);
+    });
+  };
 
   return (
-    <>
-      <Description />
-      <Options
-        updateFeedback={updateFeedback}
-        click={click}
-        resetFunction={resetFunction}
-        totalFeedback={totalFeedback}
+    <div className={css.container}>
+      <h1>Phonebook</h1>
+      <ContactForm
+        initialContact={initialContact}
+        validation={FeedbackSchema}
+        onAdd={addContacts}
       />
-      {totalFeedback > 0 ? (
-        <Feedback
-          click={click}
-          totalFeedback={totalFeedback}
-          positivePercent={positivePercent}
-        />
-      ) : (
-        <Notification />
-      )}
-    </>
+      <SearchBox value={filter} onFilter={setFilter} />
+      <ContactList contacts={searchContacts} onDelete={deleteContacts} />
+    </div>
   );
 };
 
