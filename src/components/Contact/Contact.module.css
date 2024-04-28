@@ -10,15 +10,14 @@
 }
 
 .dataContact {
-  /* display: flex;
-  flex-direction: column; */
-  /* gap: 15 px; */
-}
-
-.text {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+.text {
+  margin-bottom: 4px;
+  margin-top: 4px;
 }
 
 .btn {
